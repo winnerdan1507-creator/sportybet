@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SportEdge Pro - Premier Sports Betting</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #05080d;
+      --bg-primary: #0a1019;
+      --bg-secondary: #111827;
+      --bg-card: #161f2d;
+      --bg-elevated: #1c2736;
+      --accent-primary: #00e884;
+      --accent-secondary: #00b864;
+      --accent-gold: #fbbf24;
+      --accent-red: #ef4444;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border-primary: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    .font-display { font-family: 'Oswald', sans-serif; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Animations */
+    @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes slide-in-left { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slide-in-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slide-in-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scale-in { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
+    .animate-pulse-live { animation: pulse-live 1.5s ease-in-out infinite; }
+    .animate-slide-left { animation: slide-in-left 0.4s ease-out forwards; }
+    .animate-slide-right { animation: slide-in-right 0.4s ease-out forwards; }
+    .animate-slide-up { animation: slide-in-up 0.4s ease-out forwards; }
+    .animate-fade { animation: fade-in 0.3s ease-out forwards; }
+    .animate-scale { animation: scale-in 0.3s ease-out forwards; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Component Styles */
+    .odds-btn {
+      background: var(--bg-elevated);
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+    }
+    .odds-btn:hover:not(.selected) {
+      background: var(--bg-card);
+      border-color: var(--accent-primary);
+      transform: translateY(-1px);
+    }
+    .odds-btn.selected {
+      background: var(--accent-primary);
+      color: var(--bg-base);
+      font-weight: 600;
+    }
+
+    .nav-item { position: relative; }
+    .nav-item::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-primary);
+      transition: width 0.3s ease;
+    }
+    .nav-item:hover::after, .nav-item.active::after { width: 100%; }
+
+    .match-row:hover, .match-card:hover { background: var(--bg-elevated); cursor: pointer; }
+    
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+      transition: all 0.2s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 232, 132, 0.25);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-primary);
+      transition: all 0.2s ease;
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent-primary);
+      background: var(--bg-card);
+    }
+
+    .input-field {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-primary);
+      transition: all 0.2s ease;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(0, 232, 132, 0.1);
+    }
+
+    /* Sidebar Logic */
+    #leftSidebar {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    #leftSidebar.open {
+      transform: translateX(0);
+    }
+    @media (min-width: 1024px) {
+      #leftSidebar {
+        transform: translateX(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- TOP ANNOUNCEMENT BAR -->
+  <a href="#promotions" class="block bg-gradient-to-r from-[var(--accent-gold)] via-yellow-500 to-[var(--accent-gold)] text-black py-2 text-center text-sm font-semibold animate-fade">
+    <span class="mr-2">NEW BONUS:</span> 100% Welcome Bonus Up To $500 | Use Code: <span class="font-bold">WELCOME500</span>
+    <span class="ml-4 underline hover:no-underline">Claim Now</span>
+  </a>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-[var(--bg-primary)]/95 backdrop-blur-md border-b border-[var(--border-primary)]">
+    <div class="flex items-center h-16 px-4">
+      <!-- Left: Logo & Burger -->
+      <div class="flex items-center gap-4 w-[280px] shrink-0">
+        <button id="sidebarToggle" class="p-2 hover:bg-[var(--bg-card)] rounded-lg transition-colors" aria-label="Toggle Menu">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <a href="#" class="font-display text-2xl font-bold tracking-tight">
+          <span class="text-[var(--accent-primary)]">SPORT</span>EDGE<span class="text-[var(--accent-gold)]">PRO</span>
+        </a>
+      </div>
+
+      <!-- Center: Main Navigation -->
+      <nav class="hidden lg:flex items-center gap-1 flex-1 justify-center">
+        <a href="#sports" class="nav-item active px-4 py-2 text-sm font-medium hover:text-[var(--accent-primary)] transition-colors">Sports</a>
+        <a href="#live" class="nav-item px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">Live</a>
+        <a href="#virtuals" class="nav-item px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">Virtuals</a>
+        <a href="#casino" class="nav-item px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">Casino</a>
+        <a href="#esports" class="nav-item px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">Esports</a>
+        <a href="#jackpots" class="nav-item px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">Jackpots</a>
+        <a href="#promotions" class="nav-item px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1">
+          Promotions
+          <span class="bg-[var(--accent-red)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">HOT</span>
+        </a>
+      </nav>
+
+      <!-- Right: Search & User -->
+      <div class="flex items-center gap-3 w-[280px] justify-end shrink-0">
+        <div class="hidden md:flex relative">
+          <input type="text" placeholder="Search..." class="input-field w-48 pl-9 pr-3 py-2 rounded-lg text-sm bg-[var(--bg-base)]">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        
+        <!-- Notifications -->
+        <div class="relative">
+          <button id="notifBtn" class="p-2 hover:bg-[var(--bg-card)] rounded-lg transition-colors">
+            <svg class="w-5 h-5 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-[var(--accent-red)] rounded-full"></span>
+          </button>
+          <!-- Notification Dropdown -->
+          <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl shadow-2xl overflow-hidden animate-scale">
+            <div class="p-3 border-b border-[var(--border-primary)] flex justify-between items-center">
+              <span class="font-semibold text-sm">Notifications</span>
+              <button class="text-xs text-[var(--accent-primary)] hover:underline">Mark all read</button>
+            </div>
+            <div class="max-h-64 overflow-y-auto">
+              <a href="#" class="block p-3 hover:bg-[var(--bg-card)] border-b border-[var(--border-primary)]">
+                <div class="flex gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[var(--accent-gold)]/20 flex items-center justify-center text-[var(--accent-gold)]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium">Deposit Successful</div>
+                    <div class="text-xs text-[var(--text-muted)]">Your deposit of $200.00 was successful.</div>
+                    <div class="text-[10px] text-[var(--text-muted)] mt-1">2 mins ago</div>
+                  </div>
+                </div>
+              </a>
+              <a href="#" class="block p-3 hover:bg-[var(--bg-card)] border-b border-[var(--border-primary)]">
+                <div class="flex gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary)]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium">Bet Won!</div>
+                    <div class="text-xs text-[var(--text-muted)]">You won $145.00 from your bet on Liverpool.</div>
+                    <div class="text-[10px] text-[var(--text-muted)] mt-1">1 hour ago</div>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <div class="p-2 bg-[var(--bg-card)]">
+              <a href="#" class="block text-center text-xs text-[var(--accent-primary)] font-medium py-1">View All Notifications</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="h-8 w-px bg-[var(--border-primary)] hidden sm:block"></div>
+
+        <!-- User Actions -->
+        <div class="flex items-center gap-3">
+          <div class="hidden sm:block text-right">
+            <div class="text-xs text-[var(--text-muted)]">Balance</div>
+            <div class="font-display font-bold text-[var(--accent-primary)]" id="userBalance">$2,450.00</div>
+          </div>
+          
+          <button id="depositBtn" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold text-[var(--bg-base)]">Deposit</button>
+          <button id="withdrawBtn" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hidden sm:block">Withdraw</button>
+          
+          <button class="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-blue-500 flex items-center justify-center font-bold text-sm text-[var(--bg-base)]">JP</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <div class="flex min-h-[calc(100vh-64px)]">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside id="leftSidebar" class="fixed lg:relative w-[280px] shrink-0 bg-[var(--bg-primary)] border-r border-[var(--border-primary)] overflow-y-auto h-[calc(100vh-64px)] z-40 top-0 lg:top-auto">
+      <div class="p-3 pt-20 lg:pt-3">
+        <!-- Sports List -->
+        <div class="space-y-1" id="sportsSidebar">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Quick Links -->
+        <div class="mt-6 pt-4 border-t border-[var(--border-primary)]">
+          <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-3 mb-2">Quick Links</h3>
+          <a href="#favorites" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+            Favorites
+          </a>
+          <a href="#history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Bet History
+          </a>
+          <a href="#transactions" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Transactions
+          </a>
+          <a href="#settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Settings
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 min-w-0 overflow-y-auto">
+      <div class="p-4 lg:p-6">
+        
+        <!-- HERO CAROUSEL -->
+        <div class="relative rounded-2xl overflow-hidden mb-6 animate-fade" id="heroSection">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- LIVE NOW SECTION -->
+        <section id="live" class="mb-8">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-display text-xl font-bold flex items-center gap-2">
+              <span class="w-3 h-3 bg-[var(--accent-red)] rounded-full animate-pulse-live"></span>
+              Live Now
+              <span class="text-sm font-normal text-[var(--text-muted)]" id="liveCount">(0 events)</span>
+            </h2>
+            <a href="#" class="text-sm text-[var(--accent-primary)] hover:underline">View All</a>
+          </div>
+          <div class="grid gap-3" id="liveMatchesContainer">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- UPCOMING MATCHES -->
+        <section id="sports" class="mb-8">
+          <div class="flex items-center gap-4 mb-4 border-b border-[var(--border-primary)] overflow-x-auto pb-1">
+            <button class="tab-btn active whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-[var(--accent-primary)] text-[var(--accent-primary)]" data-tab="football">Football</button>
+            <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-white border-b-2 border-transparent" data-tab="basketball">Basketball</button>
+            <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-white border-b-2 border-transparent" data-tab="tennis">Tennis</button>
+            <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-white border-b-2 border-transparent" data-tab="esports">Esports</button>
+          </div>
+          <div id="upcomingMatchesContainer">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- POPULAR LEAGUES -->
+        <section class="mb-8">
+          <h2 class="font-display text-xl font-bold mb-4">Popular Leagues</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3" id="popularLeagues">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- CASINO & GAMES PREVIEW -->
+        <section id="casino" class="mb-8">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-display text-xl font-bold">Casino Games</h2>
+            <a href="#" class="text-sm text-[var(--accent-primary)] hover:underline">View All</a>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3" id="casinoGames">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR (BETSLIP) -->
+    <aside class="w-[320px] shrink-0 bg-[var(--bg-primary)] border-l border-[var(--border-primary)] h-[calc(100vh-64px)] sticky top-16 hidden xl:flex flex-col">
+      <!-- Betslip Tabs -->
+      <div class="flex border-b border-[var(--border-primary)]">
+        <button class="betslip-tab flex-1 py-3 text-sm font-semibold border-b-2 border-[var(--accent-primary)] text-[var(--accent-primary)]" data-tab="betslip">Bet Slip <span class="ml-1 bg-[var(--accent-primary)] text-[var(--bg-base)] text-xs px-1.5 rounded" id="betslipCount">0</span></button>
+        <button class="betslip-tab flex-1 py-3 text-sm font-medium text-[var(--text-secondary)] border-b-2 border-transparent hover:text-white" data-tab="mybets">My Bets</button>
+      </div>
+
+      <!-- Betslip Content -->
+      <div class="flex-1 overflow-y-auto">
+        <div id="betslipContent" class="p-4">
+          <div id="betslipEmpty" class="text-center py-12">
+            <svg class="w-16 h-16 mx-auto mb-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <p class="text-[var(--text-muted)]">Your bet slip is empty</p>
+            <p class="text-xs text-[var(--text-muted)] mt-1">Click odds to add selections</p>
+          </div>
+          <div id="betslipItems" class="space-y-3 hidden"></div>
+        </div>
+      </div>
+
+      <!-- Betslip Footer -->
+      <div id="betslipFooter" class="p-4 border-t border-[var(--border-primary)] bg-[var(--bg-secondary)] hidden">
+        <div class="flex gap-2 mb-3">
+          <button class="stake-type-btn flex-1 py-2 text-xs font-semibold rounded-lg bg-[var(--accent-primary)] text-[var(--bg-base)]" data-type="single">Single</button>
+          <button class="stake-type-btn flex-1 py-2 text-xs font-semibold rounded-lg bg-[var(--bg-elevated)] text-[var(--text-secondary)]" data-type="multi">Multi</button>
+        </div>
+        <div class="mb-3">
+          <label class="text-xs text-[var(--text-muted)] mb-1 block">Stake</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">$</span>
+            <input type="number" id="stakeInput" value="10" class="input-field w-full pl-7 pr-4 py-3 rounded-lg text-right font-semibold text-lg">
+          </div>
+        </div>
+        <div class="grid grid-cols-4 gap-2 mb-4">
+          <button class="quick-stake py-2 bg-[var(--bg-elevated)] rounded text-xs font-medium hover:bg-[var(--bg-card)] transition-colors" data-amount="5">$5</button>
+          <button class="quick-stake py-2 bg-[var(--bg-elevated)] rounded text-xs font-medium hover:bg-[var(--bg-card)] transition-colors" data-amount="10">$10</button>
+          <button class="quick-stake py-2 bg-[var(--bg-elevated)] rounded text-xs font-medium hover:bg-[var(--bg-card)] transition-colors" data-amount="25">$25</button>
+          <button class="quick-stake py-2 bg-[var(--bg-elevated)] rounded text-xs font-medium hover:bg-[var(--bg-card)] transition-colors" data-amount="50">$50</button>
+        </div>
+        <div class="bg-[var(--bg-base)] rounded-lg p-3 mb-4">
+          <div class="flex justify-between text-sm mb-2">
+            <span class="text-[var(--text-muted)]">Total Odds</span>
+            <span id="totalOdds" class="font-semibold">0.00</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[var(--text-muted)] text-sm">Potential Win</span>
+            <span id="potentialWin" class="font-display font-bold text-xl text-[var(--accent-primary)]">$0.00</span>
+          </div>
+        </div>
+        <button id="placeBetBtn" class="btn-primary w-full py-3 rounded-xl font-semibold text-[var(--bg-base)]">Place Bet</button>
+        <button id="clearSlipBtn" class="w-full py-2 mt-2 text-sm text-[var(--text-muted)] hover:text-[var(--accent-red)] transition-colors">Clear All</button>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <div class="fixed bottom-0 left-0 right-0 bg-[var(--bg-primary)] border-t border-[var(--border-primary)] py-2 px-4 flex justify-around lg:hidden z-40">
+    <a href="#sports" class="flex flex-col items-center gap-1 text-[var(--accent-primary)]">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="text-[10px] font-medium">Home</span>
+    </a>
+    <a href="#live" class="flex flex-col items-center gap-1 text-[var(--text-muted)]">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span class="text-[10px] font-medium">Live</span>
+    </a>
+    <a href="#" class="flex flex-col items-center gap-1 text-[var(--text-muted)] relative">
+      <div class="absolute -top-3 bg-[var(--accent-primary)] text-[var(--bg-base)] text-xs font-bold px-2 py-0.5 rounded-full" id="mobileBetCount">0</div>
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      <span class="text-[10px] font-medium">Betslip</span>
+    </a>
+    <a href="#" class="flex flex-col items-center gap-1 text-[var(--text-muted)]">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span class="text-[10px] font-medium">Account</span>
+    </a>
+  </div>
+
+  <!-- MATCH DETAIL MODAL -->
+  <div id="matchModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0" id="modalBackdrop"></div>
+    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-[var(--bg-secondary)] rounded-2xl overflow-hidden flex flex-col animate-scale">
+      <div class="flex items-center justify-between p-4 border-b border-[var(--border-primary)] bg-[var(--bg-primary)]">
+        <h3 class="font-display font-bold text-lg" id="modalTitle">Match Details</h3>
+        <button id="closeModal" class="p-2 hover:bg-[var(--bg-card)] rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-[var(--bg-base)]" id="modalContent">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPOSIT/WITHDRAW MODAL -->
+  <div id="walletModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0" id="walletModalBackdrop"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[var(--bg-secondary)] rounded-2xl overflow-hidden shadow-2xl animate-scale">
+      <div class="flex border-b border-[var(--border-primary)]">
+        <button id="depositTabBtn" class="flex-1 py-4 text-center font-semibold border-b-2 border-[var(--accent-primary)] text-[var(--accent-primary)]">Deposit</button>
+        <button id="withdrawTabBtn" class="flex-1 py-4 text-center font-semibold border-b-2 border-transparent text-[var(--text-muted)]">Withdraw</button>
+      </div>
+      <div class="p-6" id="walletContent">
+        <div class="mb-4">
+          <label class="text-xs text-[var(--text-muted)] mb-1 block">Amount</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">$</span>
+            <input type="number" id="walletAmount" value="100" class="input-field w-full pl-7 pr-4 py-3 rounded-lg text-right font-semibold text-lg">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs text-[var(--text-muted)] mb-2 block">Payment Method</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button class="p-3 border border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 rounded-lg text-center text-sm font-medium">Card</button>
+            <button class="p-3 border border-[var(--border-primary)] rounded-lg text-center text-sm font-medium text-[var(--text-secondary)]">Bank</button>
+            <button class="p-3 border border-[var(--border-primary)] rounded-lg text-center text-sm font-medium text-[var(--text-secondary)]">Crypto</button>
+          </div>
+        </div>
+        <button id="walletSubmitBtn" class="btn-primary w-full py-3 rounded-xl font-semibold text-[var(--bg-base)]">Proceed</button>
+      </div>
+      <button id="closeWalletModal" class="absolute top-4 right-4 p-1 hover:bg-[var(--bg-card)] rounded-full transition-colors">
+        <svg class="w-5 h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-20 lg:bottom-4 right-4 z-50 space-y-2"></div>
+
+  <script>
+    // ========================================
+    // DATA & STATE
+    // ========================================
+    
+    const sports = [
+      { id: 'football', name: 'Football', icon: '<circle cx="12" cy="12" r="10"/>', live: 45 },
+      { id: 'basketball', name: 'Basketball', icon: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/>', live: 23 },
+      { id: 'tennis', name: 'Tennis', icon: '<circle cx="12" cy="12" r="10"/><path d="M12 2v20"/>', live: 12 },
+      { id: 'esports', name: 'Esports', icon: '<rect x="2" y="6" width="20" height="12" rx="2"/>', live: 34 },
+    ];
+
+    const leagues = [
+      { id: 'premier-league', name: 'Premier League', country: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+      { id: 'la-liga', name: 'La Liga', country: 'Spain', flag: '🇪🇸' },
+      { id: 'bundesliga', name: 'Bundesliga', country: 'Germany', flag: '🇩🇪' },
+      { id: 'serie-a', name: 'Serie A', country: 'Italy', flag: '🇮🇹' },
+      { id: 'nba', name: 'NBA', country: 'USA', flag: '🇺🇸' },
+    ];
+
+    const teamNames = {
+      football: ['Arsenal', 'Chelsea', 'Man Utd', 'Liverpool', 'Man City', 'Tottenham', 'Barcelona', 'Real Madrid', 'Juventus', 'Bayern', 'PSG', 'Dortmund'],
+      basketball: ['Lakers', 'Celtics', 'Warriors', 'Bulls', 'Heat', 'Nets', 'Bucks', 'Suns'],
+      tennis: ['Djokovic', 'Alcaraz', 'Sinner', 'Medvedev', 'Federer', 'Nadal'],
+      esports: ['T1', 'Gen.G', 'Fnatic', 'G2', 'Cloud9', 'Team Liquid', 'NAVI', 'FaZe'],
+    };
+
+    // State
+    let allMatches = [];
+    let betslip = [];
+    let currentStake = 10;
+    let userBalance = 2450.00;
+
+    // DOM Cache
+    let els = {};
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      cacheElements();
+      generateMatches();
+      renderAll();
+      setupEventListeners();
+    });
+
+    function cacheElements() {
+      els = {
+        sidebar: document.getElementById('leftSidebar'),
+        sidebarToggle: document.getElementById('sidebarToggle'),
+        notifBtn: document.getElementById('notifBtn'),
+        notifDropdown: document.getElementById('notifDropdown'),
+        depositBtn: document.getElementById('depositBtn'),
+        withdrawBtn: document.getElementById('withdrawBtn'),
+        walletModal: document.getElementById('walletModal'),
+        closeWalletModal: document.getElementById('closeWalletModal'),
+        walletModalBackdrop: document.getElementById('walletModalBackdrop'),
+        depositTabBtn: document.getElementById('depositTabBtn'),
+        withdrawTabBtn: document.getElementById('withdrawTabBtn'),
+        walletSubmitBtn: document.getElementById('walletSubmitBtn'),
+        userBalance: document.getElementById('userBalance'),
+        
+        matchModal: document.getElementById('matchModal'),
+        modalBackdrop: document.getElementById('modalBackdrop'),
+        closeModal: document.getElementById('closeModal'),
+        modalTitle: document.getElementById('modalTitle'),
+        modalContent: document.getElementById('modalContent'),
+
+        sportsSidebar: document.getElementById('sportsSidebar'),
+        heroSection: document.getElementById('heroSection'),
+        liveMatchesContainer: document.getElementById('liveMatchesContainer'),
+        liveCount: document.getElementById('liveCount'),
+        upcomingMatchesContainer: document.getElementById('upcomingMatchesContainer'),
+        popularLeagues: document.getElementById('popularLeagues'),
+        casinoGames: document.getElementById('casinoGames'),
+
+        betslipEmpty: document.getElementById('betslipEmpty'),
+        betslipItems: document.getElementById('betslipItems'),
+        betslipFooter: document.getElementById('betslipFooter'),
+        betslipCount: document.getElementById('betslipCount'),
+        mobileBetCount: document.getElementById('mobileBetCount'),
+        totalOdds: document.getElementById('totalOdds'),
+        potentialWin: document.getElementById('potentialWin'),
+        stakeInput: document.getElementById('stakeInput'),
+        placeBetBtn: document.getElementById('placeBetBtn'),
+        clearSlipBtn: document.getElementById('clearSlipBtn'),
+        toastContainer: document.getElementById('toastContainer'),
+      };
+    }
+
+    function generateMatches() {
+      const sportsKeys = Object.keys(teamNames);
+      sportsKeys.forEach(sport => {
+        const teams = teamNames[sport];
+        for (let i = 0; i < 15; i++) {
+          const home = teams[Math.floor(Math.random() * teams.length)];
+          let away = teams[Math.floor(Math.random() * teams.length)];
+          while (home === away) away = teams[Math.floor(Math.random() * teams.length)];
+
+          const isLive = Math.random() > 0.7;
+          
+          allMatches.push({
+            id: `${sport}-${i}-${Date.now()}`,
+            sport,
+            league: leagues[Math.floor(Math.random() * leagues.length)],
+            home, away,
+            time: isLive ? null : `${Math.floor(Math.random() * 24)}:${Math.random() > 0.5 ? '00' : '30'}`,
+            isLive,
+            minute: isLive ? Math.floor(Math.random() * 90) : null,
+            homeScore: isLive ? Math.floor(Math.random() * 4) : null,
+            awayScore: isLive ? Math.floor(Math.random() * 4) : null,
+            odds: { home: (Math.random() * 3 + 1.2).toFixed(2), draw: (Math.random() * 2 + 2.5).toFixed(2), away: (Math.random() * 5 + 1.5).toFixed(2) }
+          });
+        }
+      });
+    }
+
+    // ========================================
+    // RENDERING
+    // ========================================
+
+    function renderAll() {
+      renderSportsSidebar();
+      renderHero();
+      renderLiveMatches();
+      renderUpcomingMatches('football');
+      renderPopularLeagues();
+      renderCasinoGames();
+    }
+
+    function renderSportsSidebar() {
+      els.sportsSidebar.innerHTML = sports.map(s => `
+        <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-[var(--bg-card)] transition-colors group">
+          <svg class="w-5 h-5 text-[var(--text-secondary)] group-hover:text-[var(--accent-primary)]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">${s.icon}</svg>
+          <span class="flex-1 text-sm">${s.name}</span>
+          ${s.live > 0 ? `<span class="text-xs bg-[var(--accent-red)] text-white px-1.5 py-0.5 rounded">${s.live}</span>` : ''}
+        </button>
+      `).join('');
+    }
+
+    function renderHero() {
+      const match = allMatches.find(m => m.isLive);
+      if (!match) return;
+      els.heroSection.innerHTML = `
+        <div class="relative bg-gradient-to-r from-[#0f2922] to-[#0a1a14] p-6 md:p-8 cursor-pointer" onclick="openMatchModal('${match.id}')">
+           <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+             <div>
+               <div class="inline-flex items-center gap-2 bg-[var(--accent-red)]/20 text-[var(--accent-red)] px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                 <span class="w-2 h-2 bg-[var(--accent-red)] rounded-full animate-pulse-live"></span> LIVE ${match.minute}'
+               </div>
+               <div class="text-xs text-[var(--text-muted)] mb-2">${match.league.flag} ${match.league.name}</div>
+               <h2 class="font-display text-2xl md:text-4xl font-bold mb-2">${match.home} vs ${match.away}</h2>
+             </div>
+             <div class="flex items-center gap-8 text-center">
+               <div><div class="font-display text-4xl font-bold">${match.homeScore}</div><div class="text-xs text-[var(--text-muted)]">${match.home}</div></div>
+               <div class="text-2xl text-[var(--text-muted)]">VS</div>
+               <div><div class="font-display text-4xl font-bold">${match.awayScore}</div><div class="text-xs text-[var(--text-muted)]">${match.away}</div></div>
+             </div>
+             <div class="flex gap-2">
+               <button class="odds-btn px-6 py-3 rounded-xl text-center" data-match="${match.id}" data-type="home" data-odd="${match.odds.home}"><div class="text-xs text-[var(--text-muted)]">1</div><div class="font-bold">${match.odds.home}</div></button>
+               <button class="odds-btn px-6 py-3 rounded-xl text-center" data-match="${match.id}" data-type="draw" data-odd="${match.odds.draw}"><div class="text-xs text-[var(--text-muted)]">X</div><div class="font-bold">${match.odds.draw}</div></button>
+               <button class="odds-btn px-6 py-3 rounded-xl text-center" data-match="${match.id}" data-type="away" data-odd="${match.odds.away}"><div class="text-xs text-[var(--text-muted)]">2</div><div class="font-bold">${match.odds.away}</div></button>
+             </div>
+           </div>
+        </div>`;
+    }
+
+    function renderLiveMatches() {
+      const live = allMatches.filter(m => m.isLive).slice(0, 6);
+      els.liveCount.textContent = `(${live.length} events)`;
+      els.liveMatchesContainer.innerHTML = live.map(m => `
+        <div class="bg-[var(--bg-card)] rounded-xl border border-[var(--border-primary)] overflow-hidden hover:border-[var(--accent-primary)]/50 transition-all match-card" data-match-id="${m.id}">
+          <div class="p-3 bg-[var(--bg-elevated)] border-b border-[var(--border-primary)] flex items-center justify-between">
+            <div class="flex items-center gap-2"><span class="text-sm">${m.league.flag}</span><span class="text-xs font-medium">${m.league.name}</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 bg-[var(--accent-red)] rounded-full animate-pulse-live"></span><span class="text-xs font-semibold text-[var(--accent-red)]">${m.minute}'</span></div>
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+              <span class="font-medium">${m.home}</span><span class="font-display text-xl font-bold">${m.homeScore}</span>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+              <span class="font-medium">${m.away}</span><span class="font-display text-xl font-bold">${m.awayScore}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <button class="odds-btn rounded-lg p-2 text-center" data-match="${m.id}" data-type="home" data-odd="${m.odds.home}"><div class="text-[10px] text-[var(--text-muted)]">1</div><div class="font-semibold text-sm">${m.odds.home}</div></button>
+              <button class="odds-btn rounded-lg p-2 text-center" data-match="${m.id}" data-type="draw" data-odd="${m.odds.draw}"><div class="text-[10px] text-[var(--text-muted)]">X</div><div class="font-semibold text-sm">${m.odds.draw}</div></button>
+              <button class="odds-btn rounded-lg p-2 text-center" data-match="${m.id}" data-type="away" data-odd="${m.odds.away}"><div class="text-[10px] text-[var(--text-muted)]">2</div><div class="font-semibold text-sm">${m.odds.away}</div></button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderUpcomingMatches(filter = 'football') {
+      const upcoming = allMatches.filter(m => m.sport === filter && !m.isLive);
+      const grouped = {};
+      upcoming.forEach(m => {
+        if (!grouped[m.league.id]) grouped[m.league.id] = [];
+        grouped[m.league.id].push(m);
+      });
+
+      els.upcomingMatchesContainer.innerHTML = Object.values(grouped).map(matches => `
+        <div class="bg-[var(--bg-card)] rounded-xl border border-[var(--border-primary)] overflow-hidden mb-4">
+          <div class="p-3 bg-[var(--bg-elevated)] border-b border-[var(--border-primary)] flex items-center gap-2">
+            <span>${matches[0].league.flag}</span><span class="font-medium text-sm">${matches[0].league.name}</span>
+          </div>
+          <div class="divide-y divide-[var(--border-primary)]">
+            ${matches.map(m => `
+              <div class="match-row p-3 flex items-center gap-4 transition-colors" data-match-id="${m.id}">
+                <div class="text-xs text-[var(--text-muted)] w-12">${m.time}</div>
+                <div class="flex-1 flex items-center justify-between text-sm">
+                  <span>${m.home}</span><span class="text-[var(--text-muted)] text-xs mx-2">vs</span><span>${m.away}</span>
+                </div>
+                <div class="flex gap-2">
+                  <button class="odds-btn w-16 py-2 rounded-lg text-center" data-match="${m.id}" data-type="home" data-odd="${m.odds.home}"><div class="text-[10px] text-[var(--text-muted)]">1</div><div class="font-semibold text-sm">${m.odds.home}</div></button>
+                  <button class="odds-btn w-16 py-2 rounded-lg text-center" data-match="${m.id}" data-type="draw" data-odd="${m.odds.draw}"><div class="text-[10px] text-[var(--text-muted)]">X</div><div class="font-semibold text-sm">${m.odds.draw}</div></button>
+                  <button class="odds-btn w-16 py-2 rounded-lg text-center" data-match="${m.id}" data-type="away" data-odd="${m.odds.away}"><div class="text-[10px] text-[var(--text-muted)]">2</div><div class="font-semibold text-sm">${m.odds.away}</div></button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPopularLeagues() {
+      els.popularLeagues.innerHTML = leagues.map(l => `
+        <a href="#" class="bg-[var(--bg-card)] rounded-xl p-4 border border-[var(--border-primary)] hover:border-[var(--accent-primary)]/50 transition-all text-center group">
+          <div class="text-2xl mb-2">${l.flag}</div>
+          <div class="text-xs font-medium group-hover:text-[var(--accent-primary)]">${l.name}</div>
+          <div class="text-[10px] text-[var(--text-muted)]">${l.country}</div>
+        </a>
+      `).join('');
+    }
+
+    function renderCasinoGames() {
+      const games = ['Sweet Bonanza', 'Gates of Olympus', 'Big Bass', 'Starburst', 'Mega Moolah', 'Razor Shark'];
+      els.casinoGames.innerHTML = games.map(g => `
+        <a href="#" class="rounded-xl overflow-hidden group relative h-32 bg-gradient-to-br from-purple-600 to-blue-500 p-4 flex items-end">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+          <div class="relative z-10"><div class="text-xs font-semibold">${g}</div><div class="text-[10px] text-[var(--text-muted)]">Play Now</div></div>
+        </a>
+      `).join('');
+    }
+
+    // ========================================
+    // BETSLIP LOGIC
+    // ========================================
+
+    function toggleOdds(btn) {
+      const id = btn.dataset.match;
+      const type = btn.dataset.type;
+      const odd = btn.dataset.odd;
+      const match = allMatches.find(m => m.id === id);
+      if (!match) return;
+
+      const idx = betslip.findIndex(b => b.id === id);
+
+      if (idx !== -1) {
+        if (betslip[idx].type === type) {
+          betslip.splice(idx, 1);
+          btn.classList.remove('selected');
+        } else {
+          document.querySelector(`.odds-btn[data-match="${id}"][data-type="${betslip[idx].type}"]`)?.classList.remove('selected');
+          betslip[idx] = { id, home: match.home, away: match.away, type, odd };
+          btn.classList.add('selected');
+        }
+      } else {
+        betslip.push({ id, home: match.home, away: match.away, type, odd });
+        btn.classList.add('selected');
+      }
+      updateBetslip();
+    }
+
+    function updateBetslip() {
+      const hasItems = betslip.length > 0;
+      els.betslipEmpty.classList.toggle('hidden', hasItems);
+      els.betslipItems.classList.toggle('hidden', !hasItems);
+      els.betslipFooter.classList.toggle('hidden', !hasItems);
+      els.betslipCount.textContent = betslip.length;
+      els.mobileBetCount.textContent = betslip.length;
+
+      if (hasItems) {
+        els.betslipItems.innerHTML = betslip.map(b => `
+          <div class="bg-[var(--bg-base)] rounded-lg p-3 animate-slide-right">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs text-[var(--text-muted)]">${b.home} vs ${b.away}</span>
+              <button class="remove-bet text-[var(--text-muted)] hover:text-[var(--accent-red)]" data-id="${b.id}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div class="flex justify-between"><span class="text-sm font-medium capitalize">${b.type}</span><span class="font-bold text-[var(--accent-primary)]">${b.odd}</span></div>
+          </div>
+        `).join('');
+
+        const total = betslip.reduce((a, b) => a * parseFloat(b.odd), 1);
+        els.totalOdds.textContent = total.toFixed(2);
+        els.potentialWin.textContent = `$${(total * currentStake).toFixed(2)}`;
+      }
+    }
+
+    // ========================================
+    // MODAL LOGIC
+    // ========================================
+
+    function openMatchModal(id) {
+      const m = allMatches.find(m => m.id === id);
+      if (!m) return;
+      
+      // Generate extended markets dynamically
+      const markets = [
+        { name: 'Match Result', options: [ { label: '1', odd: m.odds.home }, { label: 'X', odd: m.odds.draw }, { label: '2', odd: m.odds.away } ] },
+        { name: 'Total Goals - Over/Under 2.5', options: [ { label: 'Over 2.5', odd: '1.85' }, { label: 'Under 2.5', odd: '1.95' } ] },
+        { name: 'Both Teams To Score', options: [ { label: 'Yes', odd: '1.75' }, { label: 'No', odd: '2.10' } ] },
+        { name: 'Corners - Over/Under 9.5', options: [ { label: 'Over 9.5', odd: '1.90' }, { label: 'Under 9.5', odd: '1.90' } ] },
+        { name: 'Total Corners', options: [ { label: '1-6', odd: '4.50' }, { label: '7-9', odd: '3.20' }, { label: '10-12', odd: '2.80' }, { label: '13+', odd: '2.10' } ] },
+        { name: 'Goalkeeper Saves - Over/Under 4.5', options: [ { label: 'Over 4.5', odd: '1.65' }, { label: 'Under 4.5', odd: '2.20' } ] },
+        { name: 'First Goal Scorer', options: [ { label: m.home.substring(0,3) + ' Striker', odd: '3.50' }, { label: m.away.substring(0,3) + ' Striker', odd: '4.00' }, { label: 'Other', odd: '1.80' } ] },
+        { name: 'Anytime Goal Scorer', options: [ { label: m.home.substring(0,3) + ' Star', odd: '2.10' }, { label: m.away.substring(0,3) + ' Star', odd: '2.40' } ] },
+        { name: 'Last Goal Scorer', options: [ { label: m.home.substring(0,3) + ' Striker', odd: '3.60' }, { label: m.away.substring(0,3) + ' Striker', odd: '4.10' }, { label: 'Other', odd: '1.85' } ] },
+        { name: 'Cards - Total Over/Under 3.5', options: [ { label: 'Over 3.5', odd: '1.70' }, { label: 'Under 3.5', odd: '2.10' } ] },
+        { name: 'Offsides - Over/Under 2.5', options: [ { label: 'Over 2.5', odd: '1.90' }, { label: 'Under 2.5', odd: '1.90' } ] },
+        { name: 'Penalty Awarded', options: [ { label: 'Yes', odd: '2.80' }, { label: 'No', odd: '1.40' } ] },
+        { name: 'Red Card Shown', options: [ { label: 'Yes', odd: '3.50' }, { label: 'No', odd: '1.28' } ] },
+        { name: 'Clean Sheet - ' + m.home, options: [ { label: 'Yes', odd: '2.60' }, { label: 'No', odd: '1.45' } ] },
+        { name: 'Clean Sheet - ' + m.away, options: [ { label: 'Yes', odd: '3.20' }, { label: 'No', odd: '1.30' } ] },
+      ];
+
+      els.modalTitle.textContent = `${m.home} vs ${m.away}`;
+      els.modalContent.innerHTML = `
+        <div class="grid lg:grid-cols-3 gap-6">
+          <!-- Main Info -->
+          <div class="lg:col-span-2 space-y-4">
+            <div class="bg-[var(--bg-card)] rounded-xl p-6 text-center">
+              <div class="text-xs text-[var(--text-muted)] mb-2">${m.league.name}</div>
+              <div class="flex items-center justify-center gap-6">
+                <div class="w-16 h-16 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center font-display font-bold text-xl">${m.home.substring(0,2).toUpperCase()}</div>
+                <div class="text-center">
+                  ${m.isLive ? `<div class="text-3xl font-bold">${m.homeScore} - ${m.awayScore}</div><div class="text-xs text-[var(--accent-red)]">${m.minute}'</div>` : `<div class="text-xl font-bold">${m.time}</div>`}
+                </div>
+                <div class="w-16 h-16 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center font-display font-bold text-xl">${m.away.substring(0,2).toUpperCase()}</div>
+              </div>
+            </div>
+
+            <!-- Markets -->
+            <div class="space-y-3">
+              ${markets.map(market => `
+                <div class="bg-[var(--bg-card)] rounded-xl p-4">
+                  <div class="text-sm font-semibold mb-3">${market.name}</div>
+                  <div class="grid grid-cols-${Math.min(market.options.length, 4)} gap-2">
+                    ${market.options.map(opt => `
+                      <button class="odds-btn py-2 rounded-lg text-center text-sm" data-match="${m.id}" data-type="${opt.label}" data-odd="${opt.odd}">
+                        <div class="text-[10px] text-[var(--text-muted)]">${opt.label}</div>
+                        <div class="font-bold">${opt.odd}</div>
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="space-y-4">
+            <div class="bg-[var(--bg-card)] rounded-xl p-4">
+              <div class="font-semibold mb-3">Match Stats</div>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-[var(--text-muted)]">Form</span><span>W W D L W</span></div>
+                <div class="flex justify-between"><span class="text-[var(--text-muted)]">Last 5</span><span>W L W D D</span></div>
+                <div class="flex justify-between"><span class="text-[var(--text-muted)]">H2H Wins</span><span>12 - 8</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      els.matchModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      
+      // Re-attach odds listeners for modal content
+      els.modalContent.querySelectorAll('.odds-btn').forEach(btn => {
+        btn.addEventListener('click', () => toggleOdds(btn));
+      });
+    }
+
+    function closeMatchModal() {
+      els.matchModal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // ========================================
+    // EVENT LISTENERS
+    // ========================================
+
+    function setupEventListeners() {
+      // Sidebar Toggle
+      els.sidebarToggle.addEventListener('click', () => {
+        els.sidebar.classList.toggle('open');
+      });
+
+      // Notifications
+      els.notifBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        els.notifDropdown.classList.toggle('hidden');
+      });
+      document.addEventListener('click', () => els.notifDropdown.classList.add('hidden'));
+
+      // Wallet Modal
+      els.depositBtn.addEventListener('click', () => {
+        els.walletModal.classList.remove('hidden');
+        els.depositTabBtn.classList.add('border-[var(--accent-primary)]', 'text-[var(--accent-primary)]');
+        els.depositTabBtn.classList.remove('border-transparent', 'text-[var(--text-muted)]');
+      });
+      els.withdrawBtn.addEventListener('click', () => {
+        els.walletModal.classList.remove('hidden');
+        els.withdrawTabBtn.classList.add('border-[var(--accent-primary)]', 'text-[var(--accent-primary)]');
+        els.withdrawTabBtn.classList.remove('border-transparent', 'text-[var(--text-muted)]');
+      });
+      els.closeWalletModal.addEventListener('click', () => els.walletModal.classList.add('hidden'));
+      els.walletModalBackdrop.addEventListener('click', () => els.walletModal.classList.add('hidden'));
+
+      els.walletSubmitBtn.addEventListener('click', () => {
+        const amount = parseFloat(document.getElementById('walletAmount').value);
+        userBalance += amount;
+        els.userBalance.textContent = `$${userBalance.toFixed(2)}`;
+        els.walletModal.classList.add('hidden');
+        showToast(`$${amount.toFixed(2)} added to balance!`);
+      });
+
+      // Match Modal
+      els.closeModal.addEventListener('click', closeMatchModal);
+      els.modalBackdrop.addEventListener('click', closeMatchModal);
+
+      // Delegation for match clicks
+      document.addEventListener('click', (e) => {
+        const card = e.target.closest('.match-card');
+        const row = e.target.closest('.match-row');
+        const oddsBtn = e.target.closest('.odds-btn');
+
+        if (oddsBtn) {
+          e.stopPropagation();
+          toggleOdds(oddsBtn);
+        } else if (card && !card.contains(oddsBtn)) {
+          openMatchModal(card.dataset.matchId);
+        } else if (row && !row.contains(oddsBtn)) {
+          openMatchModal(row.dataset.matchId);
+        }
+      });
+
+      // Betslip
+      els.stakeInput.addEventListener('input', (e) => {
+        currentStake = parseFloat(e.target.value) || 0;
+        updateBetslip();
+      });
+      
+      document.querySelectorAll('.quick-stake').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentStake = parseInt(btn.dataset.amount);
+          els.stakeInput.value = currentStake;
+          updateBetslip();
+        });
+      });
+
+      els.placeBetBtn.addEventListener('click', () => {
+        if (betslip.length > 0) {
+          showToast('Bet Placed Successfully!');
+          betslip = [];
+          document.querySelectorAll('.odds-btn.selected').forEach(b => b.classList.remove('selected'));
+          updateBetslip();
+        }
+      });
+
+      els.clearSlipBtn.addEventListener('click', () => {
+        betslip = [];
+        document.querySelectorAll('.odds-btn.selected').forEach(b => b.classList.remove('selected'));
+        updateBetslip();
+      });
+
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active', 'border-[var(--accent-primary)]', 'text-[var(--accent-primary)]');
+            b.classList.add('text-[var(--text-secondary)]', 'border-transparent');
+          });
+          btn.classList.add('active', 'border-[var(--accent-primary)]', 'text-[var(--accent-primary)]');
+          btn.classList.remove('text-[var(--text-secondary)]', 'border-transparent');
+          renderUpcomingMatches(btn.dataset.tab);
+        });
+      });
+    }
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'px-4 py-3 rounded-lg bg-[var(--accent-primary)] text-[var(--bg-base)] font-medium text-sm animate-slide-left shadow-lg';
+      t.textContent = msg;
+      els.toastContainer.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(100%)';
+        t.style.transition = 'all 0.3s ease';
+        setTimeout(() => t.remove(), 300);
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
